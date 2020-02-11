@@ -60,12 +60,15 @@ if __name__== "__main__":
 
         if args.create:
             count = 0
+            todo = 0
             batch_remaining = args.batch_size
             for filename in os.listdir(args.create):
                 emojiname = filename.split('.')[0]
                 if not emojiname in emojimap:
-                    count += 1
-                    print(str(count) +  " " + emojiname)
+                    todo += 1
+            for filename in os.listdir(args.create):
+                emojiname = filename.split('.')[0]
+                if not emojiname in emojimap:
                     mp_encoder = MultipartEncoder(
                         fields={
                             'mode': 'data',
@@ -82,9 +85,14 @@ if __name__== "__main__":
                     responsepayload = json.loads(response.content)
                     batch_remaining -= 1
                     if not responsepayload['ok']:
+                        todo -= 1
+                        print(emojiname)
                         print("not okay, sleeping")
                         print('\033[93m' + responsepayload['error'] + '\033[0m')
                         time.sleep(5)
+                    else:
+                        count += 1
+                        print(str(count) + "/" + str(todo) + " " + emojiname)
                     if batch_remaining == 0:
                         print('\033[34mshhhh... sleeeping\033[0m')
                         time.sleep(10)
