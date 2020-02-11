@@ -7,7 +7,7 @@ import sys
 import argparse
 
 argument_parser = argparse.ArgumentParser(description="Slackmoji manager")
-argument_parser.add_argument("--token", "-t", action='store', required=True)
+argument_parser.add_argument("--token", "-t", help="Api token, xoxs token required for upload. Grab it from your headers when uploading manually", action='store', required=True)
 argument_parser.add_argument("--workspace", "-w", action='store', required=False, default='default')
 
 argument_parser.add_argument("--collect", action='store_true',
