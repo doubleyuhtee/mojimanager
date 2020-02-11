@@ -1,6 +1,3 @@
-import base64
-from concurrent.futures import thread
-
 import requests
 import json
 import shutil
@@ -62,11 +59,13 @@ if __name__== "__main__":
             print(json.dumps(alias_list))
 
         if args.create:
+            count = 0
             batch_remaining = args.batch_size
             for filename in os.listdir(args.create):
                 emojiname = filename.split('.')[0]
                 if not emojiname in emojimap:
-                    print(emojiname)
+                    count += 1
+                    print(str(count) +  " " + emojiname)
                     mp_encoder = MultipartEncoder(
                         fields={
                             'mode': 'data',
@@ -85,9 +84,9 @@ if __name__== "__main__":
                     if not responsepayload['ok']:
                         print("not okay, sleeping")
                         print('\033[93m' + responsepayload['error'] + '\033[0m')
-                        time.sleep(10)
+                        time.sleep(5)
                     if batch_remaining == 0:
-                        print('\034[93mshhhh... sleeeping\033[0m')
+                        print('\033[34mshhhh... sleeeping\033[0m')
                         time.sleep(10)
                         batch_remaining = args.batch_size
 
