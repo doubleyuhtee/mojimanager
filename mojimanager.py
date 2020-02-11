@@ -1,4 +1,5 @@
 import base64
+from concurrent.futures import thread
 
 import requests
 import json
@@ -8,6 +9,9 @@ import os
 import sys
 import argparse
 
+from requests_toolbelt.multipart.encoder import MultipartEncoder
+
+
 argument_parser = argparse.ArgumentParser(description="Slackmoji manager")
 argument_parser.add_argument("--token", "-t", help="Api token, xoxs token required for upload. Grab it from your headers when uploading manually", action='store', required=True)
 argument_parser.add_argument("--workspace", "-w", action='store', required=False, help="only used for creating folders", default='default')
@@ -16,6 +20,8 @@ argument_parser.add_argument("--collect", action='store_true',
                              help="Collect emojis to a folder", required=False)
 argument_parser.add_argument("--create", action='store',
                              help="Folder to upload emojis from using the file name as the name", required=False)
+argument_parser.add_argument("--batch_size", action='store', default=10,
+                             help="Number of files to upload before sleeping to avoid rate limit.  Used with --create, optional", required=False)
 
 if __name__== "__main__":
     if len(sys.argv) < 2:
@@ -56,26 +62,34 @@ if __name__== "__main__":
             print(json.dumps(alias_list))
 
         if args.create:
+            batch_remaining = args.batch_size
             for filename in os.listdir(args.create):
                 emojiname = filename.split('.')[0]
                 if not emojiname in emojimap:
                     print(emojiname)
+                    mp_encoder = MultipartEncoder(
+                        fields={
+                            'mode': 'data',
+                            'image': (filename, open(args.create + filename, 'rb'), 'form-data'),
+                            'name': emojiname
+                        }
+                    )
                     h = {
                         "Authorization": "Bearer " + args.token,
-                        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36"
+                        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36",
+                        "content-type": mp_encoder.content_type
                     }
-                    data = {
-                        'token': args.token,
-                        'mode': 'data',
-                        'name': emojiname,
-                        'image': open(args.create + filename, 'rb').read()
-                    }
-                    # TODO figure out why this form upload fails
-                    # print(data)
-                    response = requests.post("https://slack.com/api/emoji.add", headers=h, data=data)
-                    print(response)
-                    print(response.content)
-                    exit(1)
+                    response = requests.post("https://slack.com/api/emoji.add", headers=h, data=mp_encoder)
+                    responsepayload = json.loads(response.content)
+                    batch_remaining -= 1
+                    if not responsepayload['ok']:
+                        print("not okay, sleeping")
+                        print('\033[93m' + responsepayload['error'] + '\033[0m')
+                        time.sleep(10)
+                    if batch_remaining == 0:
+                        print('\034[93mshhhh... sleeeping\033[0m')
+                        time.sleep(10)
+                        batch_remaining = args.batch_size
 
 
     else:
