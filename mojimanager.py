@@ -1,3 +1,5 @@
+import base64
+
 import requests
 import json
 import shutil
@@ -8,7 +10,7 @@ import argparse
 
 argument_parser = argparse.ArgumentParser(description="Slackmoji manager")
 argument_parser.add_argument("--token", "-t", help="Api token, xoxs token required for upload. Grab it from your headers when uploading manually", action='store', required=True)
-argument_parser.add_argument("--workspace", "-w", action='store', required=False, default='default')
+argument_parser.add_argument("--workspace", "-w", action='store', required=False, help="only used for creating folders", default='default')
 
 argument_parser.add_argument("--collect", action='store_true',
                              help="Collect emojis to a folder", required=False)
@@ -58,9 +60,18 @@ if __name__== "__main__":
                 emojiname = filename.split('.')[0]
                 if not emojiname in emojimap:
                     print(emojiname)
-                    h = {"Authorization": "Bearer " + args.token}
-                    data = {'token': args.token, 'mode': 'data', 'name': emojiname, 'image': open(args.create + filename, 'rb').read()}
+                    h = {
+                        "Authorization": "Bearer " + args.token,
+                        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36"
+                    }
+                    data = {
+                        'token': args.token,
+                        'mode': 'data',
+                        'name': emojiname,
+                        'image': open(args.create + filename, 'rb').read()
+                    }
                     # TODO figure out why this form upload fails
+                    # print(data)
                     response = requests.post("https://slack.com/api/emoji.add", headers=h, data=data)
                     print(response)
                     print(response.content)
