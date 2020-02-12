@@ -34,9 +34,13 @@ if __name__== "__main__":
         emojimap = json.loads(response.content)['emoji']
 
         if args.collect:
-            if not os.path.exists("data/" + args.workspace + "/emojis"):
+            if not os.path.exists("data/"):
+                os.mkdir("data/")
+            if not os.path.exists("data/" + args.workspace):
                 os.mkdir("data/" + args.workspace)
+            if not os.path.exists("data/" + args.workspace + "/emojis"):
                 os.mkdir("data/" + args.workspace + "/emojis")
+
             with open("data/" + args.workspace + "/" + str(int(time.time())), "w") as listing:
                 listing.write(json.dumps(emojimap, sort_keys=True, indent=4))
             with open("data/" + args.workspace + "/keys" + str(int(time.time())), "w") as listing:
