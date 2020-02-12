@@ -60,12 +60,14 @@ if __name__== "__main__":
 
         if args.create:
             count = 0
-            todo = 0
+            total_mismatch = 0
+            failure_map = {}
+            total_fail_count = 0
             batch_remaining = args.batch_size
             for filename in os.listdir(args.create):
                 emojiname = filename.split('.')[0]
                 if not emojiname in emojimap:
-                    todo += 1
+                    total_mismatch += 1
             for filename in os.listdir(args.create):
                 emojiname = filename.split('.')[0]
                 if not emojiname in emojimap:
@@ -85,18 +87,23 @@ if __name__== "__main__":
                     responsepayload = json.loads(response.content)
                     batch_remaining -= 1
                     if not responsepayload['ok']:
-                        todo -= 1
+                        if not responsepayload['error'] in failure_map:
+                            failure_map[responsepayload['error']] = 0
+                        total_fail_count += 1
+                        failure_map[responsepayload['error']] += 1
                         print(emojiname)
                         print("not okay, sleeping")
                         print('\033[93m' + responsepayload['error'] + '\033[0m')
                         time.sleep(5)
                     else:
                         count += 1
-                        print(str(count) + "/" + str(todo) + " " + emojiname)
+                        print(str(count) + "/" + str(total_mismatch - total_fail_count) + " " + emojiname)
                     if batch_remaining == 0:
                         print('\033[34mshhhh... sleeeping\033[0m')
                         time.sleep(10)
                         batch_remaining = args.batch_size
+            print('\033[92m' + str(count) + "/" + str(total_mismatch) + '\033[0m success \033[31m' + str(total_fail_count) + " failed\033[0m")
+            print(json.dumps(failure_map, sort_keys=True, indent=4))
 
 
     else:
