@@ -32,6 +32,7 @@ if __name__== "__main__":
     alias_list = {}
     if response.status_code == 200:
         emojimap = json.loads(response.content)['emoji']
+        print(str(len(emojimap.keys())) + " existing emoji")
 
         if args.collect:
             if not os.path.exists("data/"):
@@ -73,7 +74,10 @@ if __name__== "__main__":
                 if not emojiname in emojimap:
                     total_mismatch += 1
             for filename in os.listdir(args.create):
+                if filename == ".DS_Store":
+                    continue
                 emojiname = filename.split('.')[0]
+
                 if not emojiname in emojimap:
                     mp_encoder = MultipartEncoder(
                         fields={
@@ -95,7 +99,7 @@ if __name__== "__main__":
                             failure_map[responsepayload['error']] = 0
                         total_fail_count += 1
                         failure_map[responsepayload['error']] += 1
-                        print(emojiname)
+                        print(filename + " " + emojiname)
                         print("not okay, sleeping")
                         print('\033[93m' + responsepayload['error'] + '\033[0m')
                         time.sleep(5)
