@@ -5,14 +5,15 @@ import time
 import os
 import sys
 import argparse
+import configparser
+from pathlib import Path
 
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 
 argument_parser = argparse.ArgumentParser(description="Slackmoji manager")
-argument_parser.add_argument("--token", "-t", help="Api token, xoxs token required for upload. Grab it from your headers when uploading manually", action='store', required=True)
-argument_parser.add_argument("--workspace", "-w", action='store', required=False, help="only used for creating folders", default='default')
-
+argument_parser.add_argument("--token", "-t", help="Api token, xoxs token required for upload. Grab it from your headers when uploading manually", action='store', required=False)
+argument_parser.add_argument("--workspace", "-w", action='store', required=False, help="Section from config to use", default='default')
 argument_parser.add_argument("--collect", action='store_true',
                              help="Collect emojis to a folder", required=False)
 argument_parser.add_argument("--create", action='store',
@@ -26,9 +27,20 @@ if __name__== "__main__":
         exit(0)
 
     args = argument_parser.parse_args(sys.argv[1:])
+    token = None
+    if args.token:
+        token = args.token
+    if args.workspace:
+        configfile_location = str(Path.home()) + "/.mojimanagerconfig"
+        config = configparser.ConfigParser()
+        config.read(configfile_location)
+        if args.workspace in config:
+            token_name = "create" if args.create else "fetch"
+            token = config[args.workspace][token_name]
+
     if not (args.collect or args.create):
         print("Requires either create with folder path or collect arg")
-    response = requests.get("https://slack.com/api/emoji.list?token=" + args.token)
+    response = requests.get("https://slack.com/api/emoji.list?token=" + token)
     alias_list = {}
     if response.status_code == 200:
         emojimap = json.loads(response.content)['emoji']
@@ -78,7 +90,7 @@ if __name__== "__main__":
                     continue
                 emojiname = filename.split('.')[0]
 
-                if not emojiname in emojimap:
+                if not emojiname == "" and not emojiname in emojimap:
                     mp_encoder = MultipartEncoder(
                         fields={
                             'mode': 'data',
@@ -87,7 +99,7 @@ if __name__== "__main__":
                         }
                     )
                     h = {
-                        "Authorization": "Bearer " + args.token,
+                        "Authorization": "Bearer " + token,
                         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36",
                         "content-type": mp_encoder.content_type
                     }
@@ -112,7 +124,5 @@ if __name__== "__main__":
                         batch_remaining = args.batch_size
             print('\033[92m' + str(count) + "/" + str(total_mismatch) + '\033[0m success \033[31m' + str(total_fail_count) + " failed\033[0m")
             print(json.dumps(failure_map, sort_keys=True, indent=4))
-
-
     else:
         print("Fail?")
