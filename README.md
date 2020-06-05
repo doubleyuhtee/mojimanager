@@ -16,7 +16,9 @@ Fetch the listing of the custom emoji in the workspace corresponding to the api 
 
 #### Sample
 
-`python mojimanager.py --token xoxp-******** --collect --workspace my_data`
+`python manage.py --token xoxp-******** --collect --workspace my_data`
+
+`python manage.py --collect --workspace teamname`
 
 ### Create
 
@@ -30,4 +32,8 @@ Upload all images in a given folder to the workspace corresponding to the api ke
 
 #### Sample
 
-`python mojimanager.py --token xoxs-********* --create data/sample/`
+`python manage.py --token xoxs-********* --create data/sample/`
+
+
+##Token
+To get your xoxs-##### token for uploading, open the customize page in your browser, open the networking tab in the developer pane, and find a request with the token included (emoji.list for example)

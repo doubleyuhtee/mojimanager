@@ -10,6 +10,7 @@ from pathlib import Path
 
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
+CONFIG_FILE_NAME = ".mojimanjerconfig"
 
 argument_parser = argparse.ArgumentParser(description="Slackmoji manager")
 argument_parser.add_argument("--token", "-t", help="Api token, xoxs token required for upload. Grab it from your headers when uploading manually", action='store', required=False)
@@ -31,7 +32,8 @@ if __name__== "__main__":
     if args.token:
         token = args.token
     if args.workspace:
-        configfile_location = str(Path.home()) + "/.mojimanagerconfig"
+        configfile_location = str(Path.home()) + "/" + CONFIG_FILE_NAME
+        print(configfile_location)
         config = configparser.ConfigParser()
         config.read(configfile_location)
         if args.workspace in config:
@@ -40,6 +42,10 @@ if __name__== "__main__":
 
     if not (args.collect or args.create):
         print("Requires either create with folder path or collect arg")
+    if not token:
+        print("\nNo token found in" + str(Path.home()) + "/" + CONFIG_FILE_NAME)
+        print("\nExample config:\n[backonfloor6]\nfetch = xoxp-654651463163-654654649845-245646546464-....\ncreate = xoxs-946546546544-654656454659-968498546566-...\n\n[thebadplace]\nfetch = xoxp-998713211087-987979841210-306546506974-...")
+        exit(1)
     response = requests.get("https://slack.com/api/emoji.list?token=" + token)
     alias_list = {}
     if response.status_code == 200:
