@@ -44,7 +44,7 @@ if __name__== "__main__":
         print("Requires either create with folder path or collect arg")
     if not token:
         print("\nNo token found in" + str(Path.home()) + "/" + CONFIG_FILE_NAME)
-        print("\nExample config:\n[backonfloor6]\nfetch = xoxp-654651463163-654654649845-245646546464-....\ncreate = xoxs-946546546544-654656454659-968498546566-...\n\n[thebadplace]\nfetch = xoxp-998713211087-987979841210-306546506974-...")
+        print("\nExample config:\n[backonfloor6]\nfetch = xoxp-654651463163-654654649845-245646546464-....\ncreate = xoxs-946546546544-654656454659-968498546566-...\nO\n[thebadplace]\nfetch = xoxp-998713211087-987979841210-306546506974-...")
         exit(1)
     response = requests.get("https://slack.com/api/emoji.list?token=" + token)
     alias_list = {}

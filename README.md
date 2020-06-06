@@ -26,7 +26,8 @@ Upload all images in a given folder to the workspace corresponding to the api ke
 
 #### Args
 
-* --token (String, required) - api key needs to be sniffed from the web ui
+* --token (String) - api key needs to be sniffed from the web ui
+* --workspace (String) - config section to pull the token from
 * --create (String, required) - path to the folder to upload.
 * --batch_size (int, default: 10) - Number of files to upload before sleeping.  This is to prevent rate limiting.
 
@@ -34,6 +35,8 @@ Upload all images in a given folder to the workspace corresponding to the api ke
 
 `python manage.py --token xoxs-********* --create data/sample/`
 
+`python manage.py --workspace backonfloor6 --create data/parrots/`
 
-##Token
+
+## Tokens
 To get your xoxs-##### token for uploading, open the customize page in your browser, open the networking tab in the developer pane, and find a request with the token included (emoji.list for example)
