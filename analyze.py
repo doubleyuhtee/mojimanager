@@ -17,6 +17,7 @@ CONFIG_FILE_NAME = ".mojimanjerconfig"
 argument_parser = argparse.ArgumentParser(description="Slackmoji manager")
 argument_parser.add_argument("--token", "-t", help="Api token, xoxs token required for upload. Grab it from your headers when uploading manually", action='store', required=False)
 argument_parser.add_argument("--workspace", "-w", action='store', required=False, help="Section from config to use and directory to output to", default='default')
+argument_parser.add_argument("--minimum", action='store', required=False, help="Minimum number of total emojis to have to be included in the graph", default=5)
 
 def to_user_count_map(list):
     map = {}
@@ -74,22 +75,26 @@ if __name__== "__main__":
                 title=plot_title
             )
         )
+        now = datetime.now()
         for k,v in userfied_map.items():
             print(k + " " + str(len(v)))
             user_time_map = {}
-            for seconds in v:
-                time = datetime.fromtimestamp(seconds).strftime('%Y-%m-%d %H:%M')
-                if time not in user_time_map:
-                    user_time_map[time] = 0
-                user_time_map[time] += 1
-            x = []
-            y = []
-            newcount = 0
-            for date,count in user_time_map.items():
-                x.append(date)
-                newcount = count + newcount
+            if len(v) >= int(args.minimum):
+                for seconds in v:
+                    time = datetime.fromtimestamp(seconds-(seconds%10)).strftime('%Y-%m-%d %H:%M:%S')
+                    if time not in user_time_map:
+                        user_time_map[time] = 0
+                    user_time_map[time] += 1
+                x = []
+                y = []
+                newcount = 0
+                for date,count in user_time_map.items():
+                    x.append(date)
+                    newcount = count + newcount
+                    y.append(newcount)
+                x.append(now)
                 y.append(newcount)
-            fig.add_trace(go.Scatter(x=x, y=y, name=k))
+                fig.add_trace(go.Scatter(x=x, y=y, name=k))
 
         fig.write_html(plot_title + '.html', auto_open=True)
 
