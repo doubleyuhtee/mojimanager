@@ -87,7 +87,8 @@ if __name__== "__main__":
             total_mismatch = 0
             failure_map = {}
             total_fail_count = 0
-            batch_remaining = args.batch_size
+            batch_size = int(args.batch_size)
+            batch_remaining = batch_size
             calculated_path = os.path.join(args.create, "")
             for filename in os.listdir(calculated_path):
                 emojiname = filename.split('.')[0]
@@ -111,6 +112,7 @@ if __name__== "__main__":
                         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36",
                         "content-type": mp_encoder.content_type
                     }
+                    # responsepayload = {'ok': True}
                     response = requests.post("https://slack.com/api/emoji.add", headers=h, data=mp_encoder)
                     responsepayload = json.loads(response.content)
                     batch_remaining -= 1
@@ -129,7 +131,7 @@ if __name__== "__main__":
                     if batch_remaining == 0:
                         print('\033[34mshhhh... sleeeping\033[0m')
                         time.sleep(10)
-                        batch_remaining = args.batch_size
+                        batch_remaining = batch_size
             print('\033[92m' + str(count) + "/" + str(total_mismatch) + '\033[0m success \033[31m' + str(total_fail_count) + " failed\033[0m")
             print(json.dumps(failure_map, sort_keys=True, indent=4))
     else:
