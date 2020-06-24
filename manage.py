@@ -21,6 +21,7 @@ argument_parser.add_argument("--create", action='store',
                              help="Folder to upload emojis from using the file name as the name", required=False)
 argument_parser.add_argument("--batch_size", action='store', default=10,
                              help="Number of files to upload before sleeping to avoid rate limit.  Used with --create, optional", required=False)
+argument_parser.add_argument("--config", action='store', required=False, help="Path to config file", default=os.path.join(Path.home(), '.mojimanjerconfig'))
 
 if __name__== "__main__":
     if len(sys.argv) < 2:
@@ -87,11 +88,12 @@ if __name__== "__main__":
             failure_map = {}
             total_fail_count = 0
             batch_remaining = args.batch_size
-            for filename in os.listdir(args.create):
+            calculated_path = os.path.join(args.create, "")
+            for filename in os.listdir(calculated_path):
                 emojiname = filename.split('.')[0]
                 if not emojiname in emojimap:
                     total_mismatch += 1
-            for filename in os.listdir(args.create):
+            for filename in os.listdir(calculated_path):
                 if filename == ".DS_Store":
                     continue
                 emojiname = filename.split('.')[0]
@@ -100,7 +102,7 @@ if __name__== "__main__":
                     mp_encoder = MultipartEncoder(
                         fields={
                             'mode': 'data',
-                            'image': (filename, open(args.create + filename, 'rb'), 'form-data'),
+                            'image': (filename, open(os.path.join(calculated_path, filename), 'rb'), 'form-data'),
                             'name': emojiname
                         }
                     )
