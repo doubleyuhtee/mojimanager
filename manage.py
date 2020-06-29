@@ -19,9 +19,10 @@ argument_parser.add_argument("--collect", action='store_true',
                              help="Collect emojis to a folder", required=False)
 argument_parser.add_argument("--create", action='store',
                              help="Folder to upload emojis from using the file name as the name", required=False)
-argument_parser.add_argument("--batch_size", action='store', default=10,
+argument_parser.add_argument("--batch_size", action='store', default=10, type=int,
                              help="Number of files to upload before sleeping to avoid rate limit.  Used with --create, optional", required=False)
 argument_parser.add_argument("--config", action='store', required=False, help="Path to config file", default=os.path.join(Path.home(), '.mojimanjerconfig'))
+argument_parser.add_argument("--dryrun", action='store_true', required=False, help="Dryrun", default=False)
 
 if __name__== "__main__":
     if len(sys.argv) < 2:
@@ -75,11 +76,12 @@ if __name__== "__main__":
                     ext =  emojimap[x][-3:]
                     location = "data/" + args.workspace + "/emojis/" + x + "." + ext
                     if not os.path.exists(location):
-                        imageresponse = requests.get(emojimap[x], stream=True)
-                        file = open(location, "wb")
-                        imageresponse.raw.decode_content = True
-                        # Copy the response stream raw data to local image file.
-                        shutil.copyfileobj(imageresponse.raw, file)
+                        if not args.dryrun:
+                            imageresponse = requests.get(emojimap[x], stream=True)
+                            file = open(location, "wb")
+                            imageresponse.raw.decode_content = True
+                            # Copy the response stream raw data to local image file.
+                            shutil.copyfileobj(imageresponse.raw, file)
             print(json.dumps(alias_list))
 
         if args.create:
@@ -112,9 +114,11 @@ if __name__== "__main__":
                         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36",
                         "content-type": mp_encoder.content_type
                     }
-                    # responsepayload = {'ok': True}
-                    response = requests.post("https://slack.com/api/emoji.add", headers=h, data=mp_encoder)
-                    responsepayload = json.loads(response.content)
+                    if args.dryrun:
+                        responsepayload = {'ok': True}
+                    else:
+                        response = requests.post("https://slack.com/api/emoji.add", headers=h, data=mp_encoder)
+                        responsepayload = json.loads(response.content)
                     batch_remaining -= 1
                     if not responsepayload['ok']:
                         if not responsepayload['error'] in failure_map:
