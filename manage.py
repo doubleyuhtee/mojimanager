@@ -15,7 +15,7 @@ IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".mng")
 
 argument_parser = argparse.ArgumentParser(description="Slackmoji manager")
 argument_parser.add_argument("--token", "-t", help="Api token, xoxs token required for upload. Grab it from your headers when uploading manually", action='store', required=False)
-argument_parser.add_argument("--workspace", "-w", action='store', required=False, help="Section from config to use and directory to output to", default='default')
+argument_parser.add_argument("--workspace", "-w", action='store', required=False, help="Section from config to use and directory to output to")
 argument_parser.add_argument("--collect", action='store_true',
                              help="Collect emojis to a folder", required=False)
 argument_parser.add_argument("--create", action='store',

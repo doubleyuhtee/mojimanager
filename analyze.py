@@ -16,7 +16,7 @@ CONFIG_FILE_NAME = ".mojimanjerconfig"
 
 argument_parser = argparse.ArgumentParser(description="Slackmoji manager")
 argument_parser.add_argument("--token", "-t", help="Api token, xoxs token required for upload. Grab it from your headers when uploading manually", action='store', required=False)
-argument_parser.add_argument("--workspace", "-w", action='store', required=False, help="Section from config to use and directory to output to", default='default')
+argument_parser.add_argument("--workspace", "-w", action='store', required=False, help="Section from config to use and directory to output to")
 argument_parser.add_argument("--minimum", action='store', required=False, help="Minimum number of total emojis to have to be included in the graph", default=5)
 
 def to_user_count_map(list):
