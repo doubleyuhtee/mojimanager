@@ -11,6 +11,7 @@ from pathlib import Path
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 CONFIG_FILE_NAME = ".mojimanjerconfig"
+IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".mng")
 
 argument_parser = argparse.ArgumentParser(description="Slackmoji manager")
 argument_parser.add_argument("--token", "-t", help="Api token, xoxs token required for upload. Grab it from your headers when uploading manually", action='store', required=False)
@@ -23,6 +24,7 @@ argument_parser.add_argument("--batch_size", action='store', default=8, type=int
                              help="Number of files to upload before sleeping to avoid rate limit.  Used with --create, (optional, default 8)", required=False)
 argument_parser.add_argument("--configfile", action='store', required=False, help="Path to config file.  Defaults (~/.mojimanjerconfig)", default=os.path.join(Path.home(), CONFIG_FILE_NAME))
 argument_parser.add_argument("--dryrun", action='store_true', required=False, help="Dryrun", default=False)
+argument_parser.add_argument("--recursive", "-r", action='store_true', required=False, help="search recursively from the given directory for images to create", default=False)
 
 if __name__== "__main__":
     if len(sys.argv) < 2:
@@ -41,12 +43,13 @@ if __name__== "__main__":
             token_name = "token" if "token" in config[args.workspace] else "create" if args.create else "fetch"
             token = config[args.workspace][token_name]
 
-        if args.workspace not in config:
-            config[args.workspace] = {}
-        if "token" not in config[args.workspace] or token != config[args.workspace]["token"]:
-            config[args.workspace]["token"] = token
-            with open(args.configfile, 'w') as configfileupdate:
-                config.write(configfileupdate)
+        if token:
+            if args.workspace not in config:
+                config[args.workspace] = {}
+            if "token" not in config[args.workspace] or token != config[args.workspace]["token"]:
+                config[args.workspace]["token"] = token
+                with open(args.configfile, 'w') as configfileupdate:
+                    config.write(configfileupdate)
 
     if not token:
         print("\nNo token found in " + args.configfile)
@@ -100,20 +103,28 @@ if __name__== "__main__":
             batch_size = int(args.batch_size)
             batch_remaining = batch_size
             calculated_path = os.path.join(args.create, "")
-            for filename in os.listdir(calculated_path):
-                emojiname = filename.split('.')[0]
-                if not emojiname in emojimap:
-                    total_mismatch += 1
-            for filename in os.listdir(calculated_path):
-                if filename == ".DS_Store":
-                    continue
-                emojiname = filename.split('.')[0]
+            emoji_files = {}
+            if args.recursive:
+                for dirpath, dirs, filenames in os.walk(calculated_path):
+                    for filename in filenames:
+                        emojiname = filename.split('.')[0]
+                        if filename.endswith(IMAGE_EXTENSIONS) and not (emojiname in emojimap) and not (emojiname in emoji_files):
+                            emoji_files[emojiname] = os.path.join(dirpath, filename)
+                            total_mismatch += 1
+            else:
+                for filename in os.listdir(calculated_path):
+                    emojiname = filename.split('.')[0]
+                    if filename.endswith(IMAGE_EXTENSIONS) and not emojiname in emojimap and not emojiname in emoji_files:
+                        emoji_files[emojiname] = os.path.join(calculated_path, filename)
+                        total_mismatch += 1
+            print(emoji_files)
+            for emojiname, filepath in emoji_files.items():
 
                 if not emojiname == "" and not emojiname in emojimap:
                     mp_encoder = MultipartEncoder(
                         fields={
                             'mode': 'data',
-                            'image': (filename, open(os.path.join(calculated_path, filename), 'rb'), 'form-data'),
+                            'image': (filepath, open(filepath, 'rb'), 'form-data'),
                             'name': emojiname
                         }
                     )
@@ -122,11 +133,11 @@ if __name__== "__main__":
                         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36",
                         "content-type": mp_encoder.content_type
                     }
-                    if args.dryrun:
-                        responsepayload = {'ok': True}
-                    else:
-                        response = requests.post("https://slack.com/api/emoji.add", headers=h, data=mp_encoder)
-                        responsepayload = json.loads(response.content)
+                    # if args.dryrun:
+                    responsepayload = {'ok': True}
+                    # else:
+                    #     response = requests.post("https://slack.com/api/emoji.add", headers=h, data=mp_encoder)
+                    #     responsepayload = json.loads(response.content)
                     batch_remaining -= 1
                     if not responsepayload['ok']:
                         if not responsepayload['error'] in failure_map:
