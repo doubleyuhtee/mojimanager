@@ -19,9 +19,9 @@ argument_parser.add_argument("--collect", action='store_true',
                              help="Collect emojis to a folder", required=False)
 argument_parser.add_argument("--create", action='store',
                              help="Folder to upload emojis from using the file name as the name", required=False)
-argument_parser.add_argument("--batch_size", action='store', default=10, type=int,
-                             help="Number of files to upload before sleeping to avoid rate limit.  Used with --create, optional", required=False)
-argument_parser.add_argument("--config", action='store', required=False, help="Path to config file", default=os.path.join(Path.home(), '.mojimanjerconfig'))
+argument_parser.add_argument("--batch_size", action='store', default=8, type=int,
+                             help="Number of files to upload before sleeping to avoid rate limit.  Used with --create, (optional, default 8)", required=False)
+argument_parser.add_argument("--configfile", action='store', required=False, help="Path to config file.  Defaults (~/.mojimanjerconfig)", default=os.path.join(Path.home(), CONFIG_FILE_NAME))
 argument_parser.add_argument("--dryrun", action='store_true', required=False, help="Dryrun", default=False)
 
 if __name__== "__main__":
@@ -34,25 +34,33 @@ if __name__== "__main__":
     if args.token:
         token = args.token
     if args.workspace:
-        configfile_location = str(Path.home()) + "/" + CONFIG_FILE_NAME
-        print(configfile_location)
+        print(args.configfile)
         config = configparser.ConfigParser()
-        config.read(configfile_location)
+        config.read(args.configfile)
         if args.workspace in config:
-            token_name = "create" if args.create else "fetch"
+            token_name = "token" if "token" in config[args.workspace] else "create" if args.create else "fetch"
             token = config[args.workspace][token_name]
 
-    if not (args.collect or args.create):
-        print("Requires either create with folder path or collect arg")
+        if args.workspace not in config:
+            config[args.workspace] = {}
+        if "token" not in config[args.workspace] or token != config[args.workspace]["token"]:
+            config[args.workspace]["token"] = token
+            with open(args.configfile, 'w') as configfileupdate:
+                config.write(configfileupdate)
+
     if not token:
-        print("\nNo token found in" + str(Path.home()) + "/" + CONFIG_FILE_NAME)
-        print("\nExample config:\n[backonfloor6]\nfetch = xoxp-654651463163-654654649845-245646546464-....\ncreate = xoxs-946546546544-654656454659-968498546566-...\nO\n[thebadplace]\nfetch = xoxp-998713211087-987979841210-306546506974-...")
+        print("\nNo token found in " + args.configfile)
+        print("\nExample config:\n[thegoodplace]\ntoken = xoxs-946546546544-654656454659-968498546566-...\nO\n[thebadplace]\ntoken = xoxp-998713211087-987979841210-306546506974-...")
         exit(1)
     response = requests.get("https://slack.com/api/emoji.list?token=" + token)
     alias_list = {}
     if response.status_code == 200:
         emojimap = json.loads(response.content)['emoji']
         print(str(len(emojimap.keys())) + " existing emoji")
+
+        if not (args.collect or args.create):
+            print("Requires either create with folder path or collect arg")
+            exit(1)
 
         if args.collect:
             if not os.path.exists("data/"):
