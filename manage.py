@@ -51,6 +51,12 @@ if __name__== "__main__":
                 with open(args.configfile, 'w') as configfileupdate:
                     config.write(configfileupdate)
 
+    if not token and not args.workspace:
+        config = configparser.ConfigParser()
+        config.read(args.configfile)
+        if "default" in config:
+            token = config["default"]["token"]
+
     if not token:
         print("\nNo token found in " + args.configfile)
         print("\nExample config:\n[thegoodplace]\ntoken = xoxs-946546546544-654656454659-968498546566-...\nO\n[thebadplace]\ntoken = xoxp-998713211087-987979841210-306546506974-...")
