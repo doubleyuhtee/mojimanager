@@ -1,33 +1,27 @@
 import requests
 import json
-import shutil
-import time
-import os
 import sys
 import argparse
-import configparser
-from pathlib import Path
 import random
 from datetime import datetime
-
+import tokenmanager
 import plotly.graph_objects as go
 
-CONFIG_FILE_NAME = ".mojimanjerconfig"
 
 argument_parser = argparse.ArgumentParser(description="Slackmoji manager")
-argument_parser.add_argument("--token", "-t", help="Api token, xoxs token required for upload. Grab it from your headers when uploading manually", action='store', required=False)
-argument_parser.add_argument("--workspace", "-w", action='store', required=False, help="Section from config to use and directory to output to")
+tokenmanager.add_command_args(argument_parser)
 argument_parser.add_argument("--minimum", action='store', required=False, help="Minimum number of total emojis to have to be included in the graph", default=5)
 
-def to_user_count_map(list):
-    map = {}
-    for entry in list:
-        if entry["user_display_name"] not in map:
-            map[entry["user_display_name"]] = []
-        map[entry["user_display_name"]].append(entry["created"])
-    for e in map.keys():
-        map[e].sort()
-    return map
+
+def to_user_count_map(all_them_shits):
+    name_to_entry_map = {}
+    for entry in all_them_shits:
+        if entry["user_display_name"] not in name_to_entry_map:
+            name_to_entry_map[entry["user_display_name"]] = []
+        name_to_entry_map[entry["user_display_name"]].append(entry["created"])
+    for e in name_to_entry_map.keys():
+        name_to_entry_map[e].sort()
+    return name_to_entry_map
 
 
 if __name__== "__main__":
@@ -36,20 +30,9 @@ if __name__== "__main__":
         exit(0)
 
     args = argument_parser.parse_args(sys.argv[1:])
-    token = None
-    if args.token:
-        token = args.token
-    if args.workspace:
-        configfile_location = str(Path.home()) + "/" + CONFIG_FILE_NAME
-        print(configfile_location)
-        config = configparser.ConfigParser()
-        config.read(configfile_location)
-        if args.workspace in config:
-            token_name = "fetch"
-            token = config[args.workspace][token_name]
+
+    token = tokenmanager.get_token(args.workspace, args.token, args.configfile)
     if not token:
-        print("\nNo token found in" + str(Path.home()) + "/" + CONFIG_FILE_NAME)
-        print("\nExample config:\n[backonfloor6]\nfetch = xoxp-654651463163-654654649845-245646546464-....\ncreate = xoxs-946546546544-654656454659-968498546566-...\nO\n[thebadplace]\nfetch = xoxp-998713211087-987979841210-306546506974-...")
         exit(1)
 
     response = requests.get("https://slack.com/api/emoji.adminList?limit=1000&token=" + token)
