@@ -1,4 +1,6 @@
 .mojimanjerconfig
 data/
 venv/*
+.idea/*
+
 
