@@ -1,2 +1,4 @@
 .mojimanjerconfig
 data/
+venv/*
+
