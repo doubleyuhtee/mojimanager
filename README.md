@@ -47,7 +47,11 @@ Upload all images in a given folder to the workspace corresponding to the api ke
 
 ## Tokens
 
-To get your xoxs-##### token for uploading, open the customize page in your browser, open the networking tab in the developer pane, and find a request with the token included (emoji.list for example)
+To get your xoxs-##### token for uploading, open the customize page in your browser, then open the console and execute following line:
+
+`window.prompt("your api token is: ", TS.boot_data.api_token)`
+    
+You can also find it yourself by opening the networking tab in the developer pane, and find a request with the token included (emoji.list for example)
 ![sniffingtoken](docs/sniffingtoken.PNG)
 
 ### Management
