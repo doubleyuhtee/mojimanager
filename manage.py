@@ -22,6 +22,25 @@ argument_parser.add_argument("--batch_size", action='store', default=8, type=int
 argument_parser.add_argument("--dryrun", action='store_true', required=False, help="Dryrun", default=False)
 argument_parser.add_argument("--recursive", "-r", action='store_true', required=False, help="search recursively from the given directory for images to create", default=False)
 
+
+class ProgressBar:
+    loading_bars = "▁▂▃▄▅▆▇█"
+
+    def __init__(self, elements):
+        self.step_size = int(elements / 800)
+        self.loading = [" " for i in range(100)]
+        self.pos = 0
+        self.curr = 0
+
+    def progress(self):
+        self.curr += 1
+        if self.curr % self.step_size == 0:
+            if self.curr/self.step_size == 8:
+                self.pos += 1
+                self.curr = 0
+            self.loading[self.pos] = self.loading_bars[int(self.curr/self.step_size)]
+        print("\x1b[1K\r[" + "".join(self.loading) + "]" + x, end="")
+
 if __name__== "__main__":
     if len(sys.argv) < 2:
         argument_parser.print_help()
@@ -33,10 +52,10 @@ if __name__== "__main__":
     if not token:
         exit(1)
 
-    response = requests.get("https://slack.com/api/emoji.list?token=" + token)
+    initial_listing_response = requests.get("https://slack.com/api/emoji.list?token=" + token)
     alias_list = {}
-    if response.status_code == 200:
-        emojimap = json.loads(response.content)['emoji']
+    if initial_listing_response.status_code == 200:
+        emojimap = json.loads(initial_listing_response.content)['emoji']
         print(str(len(emojimap.keys())) + " existing emoji")
 
         if not (args.collect or args.create):
@@ -57,12 +76,13 @@ if __name__== "__main__":
                 l = list(emojimap.keys())
                 l.sort()
                 listing.write(json.dumps(l, sort_keys=True, indent=4))
-
+            progress_bar = ProgressBar(len(emojimap.keys()))
             for x in emojimap.keys():
+                progress_bar.progress()
                 if emojimap[x].startswith("alias:"):
                     alias_list[x] = emojimap[x]
                 else:
-                    ext =  emojimap[x][-3:]
+                    ext = emojimap[x][-3:]
                     location = "data/" + args.workspace + "/emojis/" + x + "." + ext
                     if not os.path.exists(location):
                         if not args.dryrun:
@@ -114,8 +134,8 @@ if __name__== "__main__":
                     if args.dryrun:
                         responsepayload = {'ok': True}
                     else:
-                        response = requests.post("https://slack.com/api/emoji.add", headers=h, data=mp_encoder)
-                        responsepayload = json.loads(response.content)
+                        initial_listing_response = requests.post("https://slack.com/api/emoji.add", headers=h, data=mp_encoder)
+                        responsepayload = json.loads(initial_listing_response.content)
                     batch_remaining -= 1
                     if not responsepayload['ok']:
                         if not responsepayload['error'] in failure_map:
