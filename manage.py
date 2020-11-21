@@ -29,17 +29,26 @@ class ProgressBar:
     def __init__(self, elements):
         self.step_size = int(elements / 800)
         self.loading = [" " for i in range(100)]
-        self.pos = 0
+        self.loading_bar_position = 0
         self.curr = 0
+        print(elements)
+        print(self.step_size)
 
-    def progress(self):
+    def progress(self, suffix=""):
         self.curr += 1
         if self.curr % self.step_size == 0:
             if self.curr/self.step_size == 8:
-                self.pos += 1
+                self.loading_bar_position += 1
                 self.curr = 0
-            self.loading[self.pos] = self.loading_bars[int(self.curr/self.step_size)]
-        print("\x1b[1K\r[" + "".join(self.loading) + "]" + x, end="")
+            if self.loading_bar_position < len(self.loading):
+                display_char_index = int(self.curr/self.step_size)
+                if display_char_index < 0:
+                    display_char_index = 0
+                if display_char_index > len(self.loading_bars):
+                    display_char_index = len(self.loading_bars) - 1
+                self.loading[self.loading_bar_position] = self.loading_bars[display_char_index]
+        print("\x1b[1K\r[" + "".join(self.loading) + "]" + suffix, end="")
+
 
 if __name__== "__main__":
     if len(sys.argv) < 2:
@@ -78,7 +87,7 @@ if __name__== "__main__":
                 listing.write(json.dumps(l, sort_keys=True, indent=4))
             progress_bar = ProgressBar(len(emojimap.keys()))
             for x in emojimap.keys():
-                progress_bar.progress()
+                progress_bar.progress(x)
                 if emojimap[x].startswith("alias:"):
                     alias_list[x] = emojimap[x]
                 else:
@@ -91,6 +100,7 @@ if __name__== "__main__":
                             imageresponse.raw.decode_content = True
                             # Copy the response stream raw data to local image file.
                             shutil.copyfileobj(imageresponse.raw, file)
+            print("")
             print(json.dumps(alias_list))
 
         if args.create:
