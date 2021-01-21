@@ -31,8 +31,6 @@ class ProgressBar:
         self.loading = [" " for i in range(100)]
         self.loading_bar_position = 0
         self.curr = 0
-        print(elements)
-        print(self.step_size)
 
     def progress(self, suffix=""):
         self.curr += 1
