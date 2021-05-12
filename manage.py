@@ -5,7 +5,12 @@ import time
 import os
 import sys
 import argparse
+
+from PIL import Image
+
+import generate
 import tokenmanager
+import slack
 
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
@@ -21,6 +26,9 @@ argument_parser.add_argument("--batch_size", action='store', default=8, type=int
                              help="Number of files to upload before sleeping to avoid rate limit.  Used with --create, (optional, default 8)", required=False)
 argument_parser.add_argument("--dryrun", action='store_true', required=False, help="Dryrun", default=False)
 argument_parser.add_argument("--recursive", "-r", action='store_true', required=False, help="search recursively from the given directory for images to create", default=False)
+
+argument_parser.add_argument("--approve", action='store',
+                             help="Search term to find the user image and create an approve emoji", required=False)
 
 
 class ProgressBar:
@@ -59,15 +67,31 @@ if __name__== "__main__":
     if not token:
         exit(1)
 
-    initial_listing_response = requests.get("https://slack.com/api/emoji.list?token=" + token)
+    emojimap = slack.emoji_listing(token)
+
     alias_list = {}
-    if initial_listing_response.status_code == 200:
-        emojimap = json.loads(initial_listing_response.content)['emoji']
+    if emojimap:
         print(str(len(emojimap.keys())) + " existing emoji")
 
-        if not (args.collect or args.create):
-            print("Requires either create with folder path or collect arg")
+        if not (args.collect or args.create or args.approve):
+            print("Requires create with folder path, collect arg, or approve with search term")
             exit(1)
+
+        if args.approve:
+            users = slack.user_listing(token)
+            print(json.dumps(users[1], indent=2))
+            approveTarget = args.approve.lower()
+            target_user = [u for u in users if u['id'].lower() == approveTarget or
+                           u['profile']['real_name_normalized'].lower() == approveTarget or
+                           u['profile']['display_name_normalized'].lower() == approveTarget]
+            if len(target_user) != 1:
+                print("Unable to find user")
+                print(json.dumps(target_user))
+                exit(1)
+            print(json.dumps(target_user, indent=2))
+            print(target_user[0]['profile'])
+            im = Image.open(requests.get(target_user[0]['profile']['image_192'], stream=True).raw)
+            generate.approves((target_user[0]['profile']['display_name_normalized'] + '.png').lower(), im)
 
         if args.collect:
             if not os.path.exists("data/"):
