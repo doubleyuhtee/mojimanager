@@ -33,7 +33,10 @@ def approves(name, sourceImg):
                   ),
                  fill=(255, 255, 255), outline=(255, 255, 255))
     split = name.split('.')
-    sourceImg.save(split[0] + "_approves." + split[1], quality=95)
+    emojiname = split[0] + "_approves"
+    path = split[0] + "_approves." + split[1]
+    sourceImg.save(path, quality=95)
+    return {'name': emojiname, 'path': path}
 
 
 if __name__ == '__main__':

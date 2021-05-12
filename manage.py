@@ -29,6 +29,8 @@ argument_parser.add_argument("--recursive", "-r", action='store_true', required=
 
 argument_parser.add_argument("--approve", action='store',
                              help="Search term to find the user image and create an approve emoji", required=False)
+argument_parser.add_argument("--push", action='store_true', required=False, help="Upload the new approve emoji instead of just creating it", default=False)
+
 
 
 class ProgressBar:
@@ -91,7 +93,12 @@ if __name__== "__main__":
             print(json.dumps(target_user, indent=2))
             print(target_user[0]['profile'])
             im = Image.open(requests.get(target_user[0]['profile']['image_192'], stream=True).raw)
-            generate.approves((target_user[0]['profile']['display_name_normalized'] + '.png').lower(), im)
+            name = target_user[0]['profile']['display_name_normalized']
+            if not name or len(name) == 0:
+                name = target_user[0]['profile']['real_name_normalized']
+            result = generate.approves((name + '.png').lower(), im)
+            if args.push:
+                responsepayload = slack.upload_emoji(token, result['name'], result['path'], args.dryrun)
 
         if args.collect:
             if not os.path.exists("data/"):
@@ -151,23 +158,7 @@ if __name__== "__main__":
             for emojiname, filepath in emoji_files.items():
 
                 if not emojiname == "" and not emojiname in emojimap:
-                    mp_encoder = MultipartEncoder(
-                        fields={
-                            'mode': 'data',
-                            'image': (filepath, open(filepath, 'rb'), 'form-data'),
-                            'name': emojiname
-                        }
-                    )
-                    h = {
-                        "Authorization": "Bearer " + token,
-                        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36",
-                        "content-type": mp_encoder.content_type
-                    }
-                    if args.dryrun:
-                        responsepayload = {'ok': True}
-                    else:
-                        initial_listing_response = requests.post("https://slack.com/api/emoji.add", headers=h, data=mp_encoder)
-                        responsepayload = json.loads(initial_listing_response.content)
+                    responsepayload = slack.upload_emoji(token, emojiname, filepath, args.dryrun)
                     batch_remaining -= 1
                     if not responsepayload['ok']:
                         if not responsepayload['error'] in failure_map:
