@@ -24,7 +24,7 @@ def approves(name, sourceImg, image_shift_amount=.1):
     draw = ImageDraw.Draw(sourceImg, "RGBA")
     draw.ellipse(((x - outerSize - offset-1), offset-1, (x - offset+1), (offset + outerSize+1)), fill=(255, 255, 255, 64), outline=(255, 255, 255, 100))
     draw.ellipse(((x - outerSize - offset), offset, (x - offset), (offset + outerSize)), fill=(255, 255, 255), outline=(255, 255, 255))
-    draw.ellipse(((x - innerSize - offset - additional_offset), offset + additional_offset, (x - offset - additional_offset), (offset + additional_offset + innerSize)), fill=(0, 170, 0), outline=(255, 255, 255))
+    draw.ellipse(((x - innerSize - offset - additional_offset), offset + additional_offset, (x - offset - additional_offset), (offset + additional_offset + innerSize)), fill=(0, 130, 0), outline=(255, 255, 255))
 
     draw.polygon((
         (x - innerSize * .8 - offset - additional_offset), (innerSize * .6 + additional_offset),
@@ -38,7 +38,7 @@ def approves(name, sourceImg, image_shift_amount=.1):
         (x - innerSize * .58 - additional_offset), (innerSize * .8 + additional_offset),
         (x - innerSize * .61 - additional_offset), (innerSize * .8 + additional_offset),
                   ),
-                 fill=(255, 255, 255), outline=(255, 255, 255))
+                 fill=(255, 255, 255), outline=(255, 255, 255, 128))
     split = name.split('.')
     emojiname = split[0] + "-approves"
     path = split[0] + "-approves." + split[1]
