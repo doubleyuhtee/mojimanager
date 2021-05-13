@@ -96,6 +96,7 @@ if __name__== "__main__":
             name = target_user[0]['profile']['display_name_normalized']
             if not name or len(name) == 0:
                 name = target_user[0]['profile']['real_name_normalized']
+            name = name.replace('.', '')
             result = generate.approves((name + '.png').lower(), im)
             if args.push:
                 responsepayload = slack.upload_emoji(token, result['name'], result['path'], args.dryrun)

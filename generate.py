@@ -12,9 +12,15 @@ def approves(name, sourceImg):
     image_offset = int(x * .1)
     sourceImg = ImageChops.offset(sourceImg, -1 * image_offset, image_offset)
 
+    im_a = Image.new("L", sourceImg.size, 255)
+    alphaDraw = ImageDraw.Draw(im_a)
+    alphaDraw.rectangle((0,0,x,image_offset), fill=0)
+    alphaDraw.rectangle((x-image_offset,0,x,y), fill=0)
+    alphaDraw.ellipse(((x - outerSize - offset), offset, (x - offset), (offset + outerSize)), fill=255)
+
+
     draw = ImageDraw.Draw(sourceImg, "RGBA")
-    draw.rectangle((0,0,x,image_offset), fill=(255, 255, 255))
-    draw.rectangle((x-image_offset,0,x,y), fill=(255, 255, 255))
+    sourceImg.putalpha(im_a)
     draw.ellipse(((x - outerSize - offset-1), offset-1, (x - offset+1), (offset + outerSize+1)), fill=(255, 255, 255, 64), outline=(255, 255, 255, 100))
     draw.ellipse(((x - outerSize - offset), offset, (x - offset), (offset + outerSize)), fill=(255, 255, 255), outline=(255, 255, 255))
     draw.ellipse(((x - innerSize - offset - additional_offset), offset + additional_offset, (x - offset - additional_offset), (offset + additional_offset + innerSize)), fill=(0, 170, 0), outline=(255, 255, 255))
