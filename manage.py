@@ -29,6 +29,10 @@ argument_parser.add_argument("--recursive", "-r", action='store_true', required=
 
 argument_parser.add_argument("--approve", action='store',
                              help="Search term to find the user image and create an approve emoji", required=False)
+argument_parser.add_argument("--name", action='store',
+                             help="Name to use as prefix for the generated emoji", required=False)
+argument_parser.add_argument("--offset", action='store',
+                             help="Ratio of image to shift by to make room for the icon", required=False, default=.1)
 argument_parser.add_argument("--push", action='store_true', required=False, help="Upload the new approve emoji instead of just creating it", default=False)
 
 
@@ -81,7 +85,7 @@ if __name__== "__main__":
 
         if args.approve:
             users = slack.user_listing(token)
-            print(json.dumps(users[1], indent=2))
+            # print(json.dumps(users[1], indent=2))
             approveTarget = args.approve.lower()
             target_user = [u for u in users if u['id'].lower() == approveTarget or
                            u['profile']['real_name_normalized'].lower() == approveTarget or
@@ -90,16 +94,19 @@ if __name__== "__main__":
                 print("Unable to find user")
                 print(json.dumps(target_user))
                 exit(1)
-            print(json.dumps(target_user, indent=2))
-            print(target_user[0]['profile'])
+            # print(json.dumps(target_user, indent=2))
+            # print(target_user[0]['profile'])
             im = Image.open(requests.get(target_user[0]['profile']['image_192'], stream=True).raw)
             name = target_user[0]['profile']['display_name_normalized']
             if not name or len(name) == 0:
                 name = target_user[0]['profile']['real_name_normalized']
-            name = name.replace('.', '')
-            result = generate.approves((name + '.png').lower(), im)
+            if args.name:
+                name = args.name
+            name = name.replace('.', '').replace(' ', '')
+            result = generate.approves((name + '.png').lower(), im, args.offset)
             if args.push:
                 responsepayload = slack.upload_emoji(token, result['name'], result['path'], args.dryrun)
+                # print(responsepayload)
 
         if args.collect:
             if not os.path.exists("data/"):
