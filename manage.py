@@ -9,6 +9,7 @@ import argparse
 from PIL import Image
 
 import generate
+import intensify
 import tokenmanager
 import slack
 
@@ -22,6 +23,7 @@ argument_parser.add_argument("--collect", action='store_true',
                              help="Collect emojis to a folder", required=False)
 argument_parser.add_argument("--create", action='store',
                              help="Folder to upload emojis from using the file name as the name", required=False)
+argument_parser.add_argument("--intensify", action="store", help="An emoji to make all shakey", required=False)
 argument_parser.add_argument("--batch_size", action='store', default=8, type=int,
                              help="Number of files to upload before sleeping to avoid rate limit.  Used with --create, (optional, default 8)", required=False)
 argument_parser.add_argument("--dryrun", action='store_true', required=False, help="Dryrun", default=False)
@@ -79,11 +81,25 @@ if __name__== "__main__":
     if emojimap:
         print(str(len(emojimap.keys())) + " existing emoji")
 
-        if not (args.collect or args.create or args.approve):
+        if not (args.collect or args.create or args.approve or args.intensify):
             print("Requires create with folder path, collect arg, or approve with search term")
             exit(1)
+        if args.intensify:
+            ext = emojimap[args.intensify][-3:]
+            location = args.intensify + "." + ext
+            imageresponse = requests.get(emojimap[args.intensify], stream=True)
+            file = open(location, "wb")
+            imageresponse.raw.decode_content = True
+            # Copy the response stream raw data to local image file.
+            shutil.copyfileobj(imageresponse.raw, file)
+            im = Image.open(location)
+            result = intensify.intensify(args.intensify, im)
+            if args.push:
+                responsepayload = slack.upload_emoji(token, args.intensify + "-intensifies", result['path'], args.dryrun)
+                print(responsepayload)
 
-        if args.approve:
+
+        elif args.approve:
             users = slack.user_listing(token)
             # print(json.dumps(users[1], indent=2))
             approveTarget = args.approve.lower()
