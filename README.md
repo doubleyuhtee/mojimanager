@@ -6,7 +6,8 @@ For copying emoji from your slack workspace and bulk uploading folders.
 
 ### Collect
 
-Fetch the listing of the custom emoji in the workspace corresponding to the api key provided and download all images to a folder.  Each file name is taken from the emoji name.  Aliases are not handled.
+<details>
+<summary>Fetch the listing of the custom emoji in the workspace corresponding to the api key provided and download all images to a folder.  Each file name is taken from the emoji name.  Aliases are not handled.</summary>
 
 #### Args
 
@@ -22,10 +23,12 @@ Fetch the listing of the custom emoji in the workspace corresponding to the api 
 `python manage.py --collect --workspace teamname`
 
 `python manage.py --collect`  - will use `default` token from config
+</details>
 
 ### Create
 
-Upload all images in a given folder to the workspace corresponding to the api key provided use the file name as the emoji name.
+<details>
+<summary>Upload all images in a given folder to the workspace corresponding to the api key provided use the file name as the emoji name.</summary>
 
 #### Args
 
@@ -43,14 +46,52 @@ Upload all images in a given folder to the workspace corresponding to the api ke
 `python manage.py --workspace allmyfriends --create data/parrots/`
 
 `python manage.py --create . ---workspace allmyfriends --recursive`
+</details>
 
+### Approve
+
+
+<details>
+<summary>Takes a user's photo and adds a green circle with a checkbox to the top right</summary>
+
+#### Args
+
+* --approve (String) - Term to search by. User id or name
+* --push - Push to the workspace rather than just generate the icon
+
+#### Sample
+
+`python --approve "Ben" --workspace thegoodplace`
+
+`python --approve "Ben" --workspace thegoodplace --push`
+
+</details>
+
+### Intensify
+
+<details>
+<summary>Makes an emoji shake</summary>
+
+#### Args
+
+* --intensify (String) - Term to search by. emoji name, alias not supported
+* --push - Push to the workspace rather than just generate the icon
+
+#### Sample
+
+`python --approve "waiting" --workspace thegoodplace`
+
+`python --approve "waiting" --workspace thegoodplace --push`
+
+</details>
 
 ## Tokens
 
-To get your xoxs-##### token for uploading, open the customize page in your browser, then open the console and execute following line:
-
 `window.prompt("your api token is: ", TS.boot_data.api_token)`
-    
+
+<details><summary>Tokens</summary>
+To get your xoxs-##### token for uploading, open the customize page in your browser, then open the console and execute following line:
+   
 You can also find it yourself by opening the networking tab in the developer pane, and find a request with the token included (emoji.list for example)
 ![sniffingtoken](docs/sniffingtoken.PNG)
 
@@ -59,3 +100,4 @@ You can also find it yourself by opening the networking tab in the developer pan
 When you use a token with the `--workspace` option, it will be saved in a config file.  After that, using the `--workspace` option will pull the token from the config file.  You can also use `--workspace default` and after it is stored, it will be fetched when no alternatives are given.
 
 The default location of the config file is `~/.mojimanjerconfig` but can be specified with the `--config` option.
+</details>
